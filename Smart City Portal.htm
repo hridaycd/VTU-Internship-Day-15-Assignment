@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Emergency & City Service Portal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header, nav, footer {
+            background: #004d99;
+            color: white;
+            padding: 1rem;
+        }
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header img {
+            height: 40px;
+        }
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 1rem;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+        }
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding: 1rem;
+        }
+        section {
+            border: 1px solid #ccc;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        #priority-board {
+            display: flex;
+            gap: 1rem;
+        }
+        #services, #high-priority {
+            flex: 1;
+            min-height: 120px;
+            border: 2px dashed #666;
+            padding: 0.5rem;
+        }
+        .draggable {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            background: #e0e0e0;
+            cursor: grab;
+        }
+        aside {
+            border: 1px solid #999;
+            padding: 1rem;
+            background: #f9f9f9;
+        }
+        footer {
+            text-align: center;
+        }
+        @media (min-width: 600px) {
+            main {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+        #map {
+            width: 100%;
+            height: 200px;
+            margin-top: 0.5rem;
+        }
+        button {
+            margin: 0.25rem 0;
+        }
+        output {
+            display: block;
+            margin-top: 0.5rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div>
+        <img src="https://via.placeholder.com/80x40?text=Logo" alt="City Logo">
+        <span>My Smart City</span>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="#location">Location</a></li>
+            <li><a href="#drag">Priority Board</a></li>
+            <li><a href="#storage">Preferences</a></li>
+            <li><a href="#worker">Alert Counter</a></li>
+        </ul>
+    </nav>
+</header>
+<main>
+    <section id="location">
+        <h2>Find My Current Location</h2>
+        <button id="detectBtn">Detect My Location</button>
+        <div id="locData"></div>
+        <div id="map"></div>
+    </section>
+    <section id="drag">
+        <h2>Emergency Service Priority Board</h2>
+        <div id="priority-board">
+            <div id="services">
+                <div class="draggable" draggable="true" id="ambulance">🚑 Ambulance</div>
+                <div class="draggable" draggable="true" id="police">🚓 Police</div>
+                <div class="draggable" draggable="true" id="fire">🔥 Fire Department</div>
+                <div class="draggable" draggable="true" id="hospital">🏥 Hospital</div>
+            </div>
+            <div id="high-priority">
+                <strong>High Priority Area (drop here)</strong>
+            </div>
+        </div>
+    </section>
+    <section id="storage">
+        <h2>Save My Preferences</h2>
+        <label for="userName">Name:</label>
+        <input type="text" id="userName"><br>
+        <label for="serviceSelect">Preferred Service:</label>
+        <select id="serviceSelect">
+            <option value="ambulance">Ambulance</option>
+            <option value="police">Police</option>
+            <option value="fire">Fire</option>
+            <option value="hospital">Hospital</option>
+        </select><br>
+        <button id="saveBtn">Save</button>
+        <button id="removeBtn">Remove Name</button>
+        <p>Saved name: <span id="savedName"></span></p>
+        <p>Emergency help clicks this session: <span id="clickCount">0</span></p>
+        <button id="helpBtn">Emergency Help</button>
+    </section>
+    <section id="worker">
+        <h2>Emergency Alert Counter</h2>
+        <button id="startWorker">Start Worker</button>
+        <button id="stopWorker">Stop Worker</button>
+        <output id="workerOutput">0</output>
+    </section>
+    <aside>
+        <h3>Emergency Contacts</h3>
+        <ul>
+            <li>Ambulance: 108</li>
+            <li>Police: 100</li>
+            <li>Fire: 101</li>
+            <li>Disaster Management: 1070</li>
+        </ul>
+    </aside>
+</main>
+<footer>
+    Contact us at info@smartcity.example.com &copy; 2026
+</footer>
+
+<script>
+// Geolocation
+const detectBtn = document.getElementById('detectBtn');
+const locData = document.getElementById('locData');
+const mapDiv = document.getElementById('map');
+
+detectBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+        locData.textContent = 'Geolocation not supported.';
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(success, error, { timeout: 10000 });
+});
+
+function success(pos) {
+    const { latitude, longitude, accuracy } = pos.coords;
+    locData.innerHTML = `Latitude: ${latitude}<br>
+                         Longitude: ${longitude}<br>
+                         Accuracy: ${accuracy} meters<br>
+                         Timestamp: ${new Date(pos.timestamp).toLocaleString()}`;
+    // embed map
+    mapDiv.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0"
+        src="https://www.google.com/maps?q=${latitude},${longitude}&hl=es;z=14&output=embed" allowfullscreen></iframe>`;
+}
+
+function error(err) {
+    switch(err.code) {
+        case err.PERMISSION_DENIED:
+            locData.textContent = 'Error: Permission denied';
+            break;
+        case err.POSITION_UNAVAILABLE:
+            locData.textContent = 'Error: Position unavailable';
+            break;
+        case err.TIMEOUT:
+            locData.textContent = 'Error: Timeout';
+            break;
+        default:
+            locData.textContent = 'Error: Unknown error';
+    }
+}
+
+// Drag and Drop
+const draggables = document.querySelectorAll('.draggable');
+const highPriority = document.getElementById('high-priority');
+
+draggables.forEach(item => {
+    item.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', e.target.id);
+    });
+});
+
+highPriority.addEventListener('dragover', e => {
+    e.preventDefault();
+});
+highPriority.addEventListener('drop', e => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    const node = document.getElementById(id);
+    if (node) {
+        highPriority.appendChild(node);
+    }
+});
+
+// Web Storage
+const userNameInput = document.getElementById('userName');
+const serviceSelect = document.getElementById('serviceSelect');
+const saveBtn = document.getElementById('saveBtn');
+const removeBtn = document.getElementById('removeBtn');
+const savedNameSpan = document.getElementById('savedName');
+const helpBtn = document.getElementById('helpBtn');
+const clickCountSpan = document.getElementById('clickCount');
+
+// load localStorage
+if (localStorage.getItem('userName')) {
+    savedNameSpan.textContent = localStorage.getItem('userName');
+}
+
+saveBtn.addEventListener('click', () => {
+    const name = userNameInput.value.trim();
+    const service = serviceSelect.value;
+    if (name) {
+        localStorage.setItem('userName', name);
+        localStorage.setItem('preferredService', service);
+        savedNameSpan.textContent = name;
+        alert('Preferences saved.');
+    }
+});
+
+removeBtn.addEventListener('click', () => {
+    localStorage.removeItem('userName');
+    localStorage.removeItem('preferredService');
+    savedNameSpan.textContent = '';
+});
+
+// sessionStorage click counter
+let counter = Number(sessionStorage.getItem('helpClicks') || 0);
+clickCountSpan.textContent = counter;
+helpBtn.addEventListener('click', () => {
+    counter += 1;
+    sessionStorage.setItem('helpClicks', counter);
+    clickCountSpan.textContent = counter;
+});
+
+// Web Worker
+let worker;
+const startBtn = document.getElementById('startWorker');
+const stopBtn = document.getElementById('stopWorker');
+const workerOutput = document.getElementById('workerOutput');
+
+startBtn.addEventListener('click', () => {
+    if (typeof Worker !== 'undefined') {
+        if (!worker) {
+            worker = new Worker('emergency_worker.js');
+            worker.onmessage = function(e) {
+                workerOutput.textContent = e.data;
+            };
+        }
+        worker.postMessage('start');
+    } else {
+        alert('Web Workers not supported in this browser.');
+    }
+});
+
+stopBtn.addEventListener('click', () => {
+    if (worker) {
+        worker.postMessage('stop');
+        worker.terminate();
+        worker = null;
+    }
+});
+</script>
+</body>
+</html>
